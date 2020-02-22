@@ -7,12 +7,16 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.icu.text.CaseMap;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 
 import com.example.graph2.Model.Player;
+import com.example.graph2.Model.Star;
+
+import java.util.ArrayList;
 
 public class MyDraw extends SurfaceView implements Runnable
 {
@@ -22,11 +26,18 @@ public class MyDraw extends SurfaceView implements Runnable
     private Paint paint;
     private Canvas canvas;
     private SurfaceHolder surfaceHolder;
-    public MyDraw(Context context) {
+    private ArrayList<Star> stars=new ArrayList<>();
+    public MyDraw(Context context,int screenX,int screenY) {
         super(context);
-        player=new Player(context);
+        player=new Player(context,screenX,screenY);
         surfaceHolder=getHolder();
         paint=new Paint();
+        int starNums=100;
+        for(int i=0;i<starNums;i++)
+        {
+            Star s=new Star(screenX,screenY);
+            stars.add(s);
+        }
     }
 
     @Override
@@ -41,6 +52,10 @@ public class MyDraw extends SurfaceView implements Runnable
     public void  update()
     {
         player.Update();
+        for(Star s:stars)
+        {
+            s.Update(player.getSpeed());
+        }
     }
 
     public void draw()
@@ -49,6 +64,12 @@ public class MyDraw extends SurfaceView implements Runnable
         {
             canvas=surfaceHolder.lockCanvas();
                 canvas.drawColor(Color.BLACK);
+                paint.setColor(Color.RED);
+                for(Star s:stars)
+                {
+                    paint.setStrokeWidth(s.getStarWidth());
+                    canvas.drawPoint(s.getX(),s.getY(),paint);
+                }
                 canvas.drawBitmap(player.getBitmap(),
                         player.getX(),
                         player.getY(),
@@ -79,5 +100,19 @@ public class MyDraw extends SurfaceView implements Runnable
         playing=true;
         gameThread=new Thread(this);
         gameThread.start();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()&MotionEvent.ACTION_MASK)
+        {
+            case MotionEvent.ACTION_UP:
+                player.stopBoosting();
+                break;
+            case MotionEvent.ACTION_DOWN:
+                player.setBoosting();
+                break;
+        }
+        return true;
     }
 }
