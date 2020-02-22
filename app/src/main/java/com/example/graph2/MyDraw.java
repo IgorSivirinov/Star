@@ -8,59 +8,76 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.view.MotionEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 
-public class MyDraw extends View
+import com.example.graph2.Model.Player;
+
+public class MyDraw extends SurfaceView implements Runnable
 {
-    private int x;
-    private int y;
+    volatile boolean playing;
+    private Thread gameThread=null;
+    private Player player;
+    private Paint paint;
     private Canvas canvas;
-    Paint paint;
+    private SurfaceHolder surfaceHolder;
     public MyDraw(Context context) {
         super(context);
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        this.canvas=canvas;
+        player=new Player(context);
+        surfaceHolder=getHolder();
         paint=new Paint();
-        paint.setSubpixelText(true);
-        paint.setAntiAlias(true);
-        paint.setStyle(Paint.Style.FILL);
-//        paint.setColor(Color.argb(127,0,0,255));
- //       paint.setColor(Color.parseColor("#FFFF00"));
-        paint.setColor(getResources().getColor(R.color.colorAccent));
-        canvas.drawPaint(paint);
-        paint.setColor(Color.GREEN);
-        canvas.drawCircle(getWidth()/2,getHeight()/2,100,paint);
-        paint.setColor(Color.BLACK);
-        canvas.drawRect(10,10,getWidth()/2,200,paint);
-        paint.setColor(Color.WHITE);
-        paint.setTextSize(40);
-        canvas.rotate(45,200,200);
-        canvas.drawText("My Canvas",200,100,paint);
-        Bitmap bitmap= BitmapFactory.decodeResource(getResources(),
-                R.drawable.ic_launcher_background);
-        canvas.drawBitmap(bitmap,x,y,paint);
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        int eventAction = event.getAction();
-        if (eventAction == MotionEvent.ACTION_DOWN)  {
-            x=(int)event.getX();
-            y=(int)event.getY();
+    public void run() {
+        while (playing)
+        {
             update();
+            draw();
+            control();
         }
-        return true;
     }
-    protected void update () {
-        paint.setColor(getResources().getColor(R.color.colorAccent));
-        canvas.drawPaint(paint);
-        Bitmap bitmap= BitmapFactory.decodeResource(getResources(),
-                R.drawable.ic_launcher_background);
-        canvas.drawBitmap(bitmap,x,y,paint);
-        invalidate();
+    public void  update()
+    {
+        player.Update();
+    }
+
+    public void draw()
+    {
+        if(surfaceHolder.getSurface().isValid())
+        {
+            canvas=surfaceHolder.lockCanvas();
+                canvas.drawColor(Color.BLACK);
+                canvas.drawBitmap(player.getBitmap(),
+                        player.getX(),
+                        player.getY(),
+                        paint);
+            surfaceHolder.unlockCanvasAndPost(canvas);
+        }
+    }
+    public void control()
+    {
+        try {
+            gameThread.sleep(17);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    public void  pause()
+    {
+        playing=false;
+        try {
+            gameThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void resume()
+    {
+        playing=true;
+        gameThread=new Thread(this);
+        gameThread.start();
     }
 }
