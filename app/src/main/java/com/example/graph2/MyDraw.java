@@ -172,7 +172,7 @@ public class MyDraw extends SurfaceView implements Runnable
     public void Clash() {
         for(Enemy e:enemies)
         {
-            if((player.getX()+50>e.getX()&&player.getX()<e.getX())&&(player.getY()<=e.getY()+50&&player.getY()>=e.getY()-50)&&time>5){
+            if( (player.getX()+50>e.getX()&&player.getX()<e.getX())&&(player.getY()<=e.getY()+50&&player.getY()>=e.getY()-50)&&time>5){
                     player.setX(player.getX()-30);
                     killCount-=1;
             }
