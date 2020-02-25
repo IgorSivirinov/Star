@@ -19,11 +19,14 @@ import com.example.graph2.Model.Player;
 import com.example.graph2.Model.Star;
 
 import java.util.ArrayList;
+import java.util.concurrent.RunnableFuture;
 
 public class MyDraw extends SurfaceView implements Runnable
 {
     volatile boolean playing;
+    volatile boolean timeCount;
     private Thread gameThread=null;
+    private Thread timeThread=null;
     private Player player;
     private Bullet bullet;
     private Paint paint;
@@ -31,6 +34,9 @@ public class MyDraw extends SurfaceView implements Runnable
     private SurfaceHolder surfaceHolder;
     private ArrayList<Enemy> enemies = new ArrayList<>();
     private ArrayList<Star> stars=new ArrayList<>();
+    private int killCount;
+    private int time=0;
+    private int life = 3;
     public MyDraw(Context context,int screenX,int screenY) {
         super(context);
         player=new Player(context,screenX,screenY);
@@ -59,9 +65,10 @@ public class MyDraw extends SurfaceView implements Runnable
             update();
             draw();
             control();
-            Killing();
+
         }
     }
+
     public void  update()
     {
         bullet.Update(player.getX(),player.getY(),player.getSpeed());
@@ -74,6 +81,9 @@ public class MyDraw extends SurfaceView implements Runnable
             {
         e.Update(player.getSpeed());
         }
+        Killing();
+            Clash();
+            Death();
 
 
     }
@@ -103,6 +113,9 @@ public class MyDraw extends SurfaceView implements Runnable
                         player.getX(),
                         player.getY(),
                         paint);
+                paint.setColor(Color.WHITE);
+                paint.setTextSize(50);
+                canvas.drawText("Очков: "+Integer.toString(killCount)+"   Жизни: "+Integer.toString(life),100,100,paint);
             surfaceHolder.unlockCanvasAndPost(canvas);
         }
     }
@@ -129,16 +142,54 @@ public class MyDraw extends SurfaceView implements Runnable
         playing=true;
         gameThread=new Thread(this);
         gameThread.start();
+        timeCount=true;
+        timeThread=new Thread(new TimeTC());
+        timeThread.start();
+    }
+    class TimeTC implements Runnable{
+
+        @Override
+        public void run() {
+            while (timeCount) {
+                try {
+                    timeThread.sleep(1000);
+                    time++;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
     public void Killing(){
         for(Enemy e:enemies)
         {
             if((bullet.getX()>e.getX())&&(bullet.getY()<=e.getY()+50&&bullet.getY()>=e.getY()-50)){
                 e.setX(-1);
+                killCount+=10;
             }
         }
     }
+    public void Clash() {
+        for(Enemy e:enemies)
+        {
+            if((player.getX()+50>e.getX()&&player.getX()<e.getX())&&(player.getY()<=e.getY()+50&&player.getY()>=e.getY()-50)&&time>5){
+                    player.setX(player.getX()-30);
+                    killCount-=1;
+            }
 
+        }
+    }
+    private void Death(){
+        if(player.getX()<=0){
+            life--;
+            time=0;
+            player.setX(300);
+        }
+        if (life<=0){
+            killCount=0;
+            life=3;
+        }
+    }
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()&MotionEvent.ACTION_MASK)
