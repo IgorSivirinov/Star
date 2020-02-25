@@ -7,14 +7,16 @@ import android.os.Bundle;
 import android.view.Display;
 
 public class GameActivity extends AppCompatActivity {
+
     private MyDraw gameView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Display display=getWindowManager().getDefaultDisplay();
-        Point size=new Point();
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
         display.getSize(size);
-        gameView=new MyDraw(this,size.x,size.y);
+        gameView = new MyDraw(this, size.x, size.y);
         setContentView(gameView);
     }
 
